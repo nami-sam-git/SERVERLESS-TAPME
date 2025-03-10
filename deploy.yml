@@ -1,0 +1,30 @@
+name: Deploy Static Website to S3
+
+on:
+  push:
+    branches:
+      - main  # Trigger workflow saat ada push ke branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1  # Ganti dengan region S3 bucket Anda
+
+      # Step 3: Deploy files to S3 bucket
+      - name: Deploy files to S3
+        run: |
+          aws s3 cp index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html --acl public-read
+          aws s3 cp script.js s3://${{ secrets.S3_BUCKET_NAME }}/script.js --acl public-read
