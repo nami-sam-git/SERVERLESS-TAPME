@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buku Tamu - Resepsi Pernikahan</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Font khusus untuk judul */
+        .font-mewah {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Font untuk teks lainnya */
+        .font-tegas {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        /* Background mewah */
+        body {
+            background-image: url('https://www.transparenttextures.com/patterns/dark-wood.png');
+            background-color: #2c3e50; /* Warna dasar gelap */
+        }
+
+        /* Warna teks dan card */
+        .text-mewah {
+            color: #f4f4f4; /* Warna teks terang */
+        }
+
+        .card-mewah {
+            background-color: rgba(255, 255, 255, 0.1); /* Card transparan */
+            backdrop-filter: blur(10px); /* Efek blur */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Border transparan */
+        }
+
+        /* Tombol mewah */
+        .btn-mewah {
+            background-color: #ff8a31; /* Warna coklat mewah */
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-mewah:hover {
+            background-color: #ff6f00; /* Warna orange lebih gelap saat hover */
+        }
+
+        /* Tabel mewah */
+        .table-container {
+            max-height: 70vh; /* Batasi tinggi container */
+            overflow-y: auto; /* Aktifkan scroll vertikal */
+        }
+
+        .table-mewah {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1); /* Transparan */
+            color: #f4f4f4; /* Warna teks terang */
+        }
+
+        .table-mewah th,
+        .table-mewah td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Border transparan */
+        }
+
+        .table-mewah th {
+            background-color: #4A5568; /* Warna solid untuk header (abu-abu gelap) */
+            color: #f4f4f4; /* Warna teks terang */
+            position: sticky; /* Buat header tetap di tempat */
+            top: 0; /* Posisi header di bagian atas */
+            z-index: 1; /* Pastikan header di atas konten */
+        }
+
+        /* Padding untuk body tabel agar tidak tertutup header */
+        .table-mewah tbody {
+            padding-top: 50px; /* Sesuaikan dengan tinggi header */
+        }
+
+        /* Warna notifikasi */
+        .notification-success {
+            background-color: #4CAF50; /* Hijau muda */
+            color: white;
+        }
+
+        .notification-error {
+            background-color: #E57373; /* Merah muda */
+            color: white;
+        }
+
+        /* Warna tombol Edit dan Delete */
+        .btn-edit {
+            background-color: #FFD700; /* Emas */
+            color: black;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-edit:hover {
+            background-color: #FFC107; /* Emas lebih gelap */
+        }
+
+        .btn-delete {
+            background-color: #8B0000; /* Merah marun */
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background-color: #6B0000; /* Merah marun lebih gelap */
+        }
+    </style>
+</head>
+<body class="text-mewah">
+    <div class="container mx-auto p-5 relative z-10">
+        <!-- Judul dengan font mewah -->
+        <h2 class="text-center text-5xl font-mewah text-gold-500 mb-8">~ BUKU TAMU PERNIKAHAN ~</h2>
+
+        <!-- Notifikasi -->
+        <div id="notification" class="hidden fixed top-4 right-4 p-4 rounded-lg shadow-lg font-tegas"></div>
+
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Form untuk memasukkan data tamu -->
+            <div class="w-full md:w-1/2 p-6 rounded-lg shadow-md card-mewah">
+                <h4 class="text-xl font-mewah text-gold-500 mb-4">Isi Buku Tamu</h4>
+                <form id="guestForm">
+                    <div class="mb-4">
+                        <label for="name" class="block text-sm font-tegas">Nama</label>
+                        <input type="text" id="name" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-transparent text-mewah" placeholder="Masukkan nama tamu" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="message" class="block text-sm font-tegas">Pesan</label>
+                        <textarea id="message" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-transparent text-mewah" placeholder="Masukkan pesan" rows="6" required></textarea>
+                    </div>
+                    <button type="submit" class="w-full btn-mewah p-2 rounded-md">Kirim</button>
+                </form>
+            </div>
+
+            <!-- Daftar Tamu -->
+            <div class="w-full md:w-1/2 p-6 rounded-lg shadow-md card-mewah">
+                <h4 class="text-xl font-mewah text-gold-500 mb-4">Daftar Tamu</h4>
+                <div class="table-container">
+                    <table class="table-mewah">
+                        <thead>
+                            <tr>
+                                <th class="p-2 text-left">No</th>
+                                <th class="p-2 text-left">Nama</th>
+                                <th class="p-2 text-left">Pesan</th>
+                                <th class="p-2 text-left">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guestList" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
