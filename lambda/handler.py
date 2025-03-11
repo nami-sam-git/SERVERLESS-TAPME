@@ -7,15 +7,30 @@ import time
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('BukuTamuTable')
 sqs = boto3.client('sqs')
-queue_url = 'https://sqs.us-east-1.amazonaws.com/852395905531/BukuTamuQueue'  # Ganti dengan URL SQS Anda
+queue_url = 'https://sqs.xxxxxxx.amazonaws.com/xxxxxxxxxxxxxx/BukuTamuQueue'  # Ganti dengan URL SQS Anda
 
 def lambda_handler(event, context):
     try:
         # Ambil HTTP method dari event
         http_method = event['httpMethod']
         
+        # Handle OPTIONS request (Preflight CORS)
+        if http_method == 'OPTIONS':
+            return {
+                "isBase64Encoded": False,
+                "statusCode": 200,
+                "statusDescription": "200 OK",
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",  # Izinkan semua domain
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",  # Izinkan metode yang diperlukan
+                    "Access-Control-Allow-Headers": "Content-Type"  # Izinkan header yang diperlukan
+                },
+                "body": ""
+            }
+        
         # Handle GET request (Mengambil semua tamu)
-        if http_method == 'GET':
+        elif http_method == 'GET':
             return handle_get(event)
         
         # Handle POST request (Menambahkan tamu baru)
@@ -88,6 +103,67 @@ def handle_get(event):
                 "Access-Control-Allow-Origin": "*"
             },
             "body": json.dumps(response['Items'])  # Pastikan body adalah string JSON
+        }
+    
+    except ClientError as e:
+        return {
+            "isBase64Encoded": False,
+            "statusCode": 500,
+            "statusDescription": "500 Internal Server Error",
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            "body": json.dumps({"message": str(e)})
+        }
+
+# Fungsi untuk menangani POST request
+def handle_post(event):
+    try:
+        # Parse data dari body request
+        body = json.loads(event['body'])
+        nama = body.get('nama', '').strip()
+        pesan = body.get('pesan', '').strip()
+        
+        # Validasi input
+        if not nama or not pesan:
+            return {
+                "isBase64Encoded": False,
+                "statusCode": 400,
+                "statusDescription": "400 Bad Request",
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": json.dumps({"message": "Nama dan pesan tidak boleh kosong"})
+            }
+
+        # Generate ID unik (contoh menggunakan timestamp)
+        id = str(int(time.time()))
+        
+        # Buat pesan untuk dikirim ke SQS
+        message = {
+            'id': id,
+            'nama': nama,
+            'pesan': pesan
+        }
+        
+        # Kirim pesan ke SQS
+        sqs.send_message(
+            QueueUrl=queue_url,
+            MessageBody=json.dumps(message)
+        )
+        
+        # Kembalikan respons sukses
+        return {
+            "isBase64Encoded": False,
+            "statusCode": 200,
+            "statusDescription": "200 OK",
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            "body": json.dumps({"message": "Data tamu berhasil dikirim ke antrian!", "id": id})
         }
     
     except ClientError as e:
