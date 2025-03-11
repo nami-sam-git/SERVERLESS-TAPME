@@ -7,7 +7,7 @@ import time
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('BukuTamuTable')
 sqs = boto3.client('sqs')
-queue_url = 'https://sqs.<region>.amazonaws.com/<account-id>/BukuTamuQueue'  # Ganti dengan URL SQS Anda
+queue_url = 'https://sqs.xxxxxxxxxxxxxxxxxxxxxxxxxxx/BukuTamuQueue'  # Ganti dengan URL SQS Anda
 
 def lambda_handler(event, context):
     try:
@@ -124,6 +124,7 @@ def handle_post(event):
         sqs.send_message(
             QueueUrl=queue_url,
             MessageBody=json.dumps(message)
+        )
         
         # Kembalikan respons sukses
         return {
@@ -152,9 +153,22 @@ def handle_post(event):
 # Fungsi untuk menangani PUT request
 def handle_put(event):
     try:
-        # Ambil ID dari path parameter
-        id = event['pathParameters']['id']
-        
+        # Ambil ID dari path (misalnya, /1741654045)
+        path = event.get('path', '')  # Dapatkan path dari event
+        id = path.split('/')[-1]  # Ambil ID dari path
+
+        if not id:
+            return {
+                "isBase64Encoded": False,
+                "statusCode": 400,
+                "statusDescription": "400 Bad Request",
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": json.dumps({"message": "ID tidak ditemukan di path"})
+            }
+
         # Parse data dari body request
         body = json.loads(event['body'])
         nama = body['nama']
@@ -197,9 +211,22 @@ def handle_put(event):
 # Fungsi untuk menangani DELETE request
 def handle_delete(event):
     try:
-        # Ambil ID dari path parameter
-        id = event['pathParameters']['id']
-        
+        # Ambil ID dari path (misalnya, /1741654045)
+        path = event.get('path', '')  # Dapatkan path dari event
+        id = path.split('/')[-1]  # Ambil ID dari path
+
+        if not id:
+            return {
+                "isBase64Encoded": False,
+                "statusCode": 400,
+                "statusDescription": "400 Bad Request",
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": json.dumps({"message": "ID tidak ditemukan di path"})
+            }
+
         # Hapus data dari tabel
         table.delete_item(Key={'id': id})
         
