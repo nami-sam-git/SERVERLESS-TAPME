@@ -1,50 +1,52 @@
 $(document).ready(function() {
-    const apiUrl = 'https://APIurl'; // Ganti dengan URL API Gateway Anda
-    let selectedGuestId = null; // Menyimpan ID tamu yang dipilih untuk diupdate
+    const apiUrl = 'http://apiURL';
 
-    // Fungsi untuk menampilkan notifikasi
+    let selectedGuestId = null; // ID tamu yang akan diperbarui
+
+    // Fungsi menampilkan notifikasi
     function showNotification(message, type) {
         const notification = $('#notification');
-        notification.removeClass('hidden notification-success notification-error');
-        notification.addClass(type === 'success' ? 'notification-success' : 'notification-error');
-        notification.text(message);
-        notification.removeClass('hidden');
+        notification.removeClass('hidden notification-success notification-error notification-info');
+        notification.addClass(`notification-${type}`);
+        notification.text(message).removeClass('hidden');
 
-        // Notifikasi akan hilang dalam 3 detik
         setTimeout(() => {
             notification.addClass('hidden');
         }, 3000);
     }
 
-    // Fetch guests (READ - GET)
+    // Fungsi memuat daftar tamu (GET)
     function loadGuests() {
         $.ajax({
             url: apiUrl,
             method: 'GET',
-            success: function(response) {
-                console.log('Respons API:', response); // Debug: Lihat respons API di konsol
+            success: function(data) {
+                console.log('Respons API:', data); 
 
-                // Parse `body` dari string JSON ke array objek
-                const data = JSON.parse(response.body);
+                // Pastikan data yang diterima adalah array
+                if (!Array.isArray(data)) {
+                    console.error('Response is not an array');
+                    showNotification('Gagal memuat daftar tamu: Respons tidak valid', 'error');
+                    return;
+                }
 
-                // Urutkan data dari yang terbaru (berdasarkan ID atau timestamp)
+                // Urutkan berdasarkan ID (terbaru ke terlama)
                 const sortedData = data.sort((a, b) => b.id - a.id);
-
                 $('#guestList').empty();
 
                 if (sortedData.length === 0) {
-                    showNotification('Daftar tamu kosong.', 'warning');
+                    showNotification('Daftar tamu kosong.', 'info');
                 } else {
                     showNotification('Daftar tamu berhasil dimuat.', 'success');
                 }
 
+                // Tampilkan tamu ke dalam tabel
                 sortedData.forEach((guest, index) => {
-                    console.log('Tamu:', guest); // Debug: Lihat setiap tamu di konsol
                     $('#guestList').append(`
                         <tr>
                             <td class="p-2">${index + 1}</td>
-                            <td class="p-2">${guest.nama}</td>
-                            <td class="p-2">${guest.pesan}</td>
+                            <td class="p-2">${guest.nama || 'Nama tidak tersedia'}</td>
+                            <td class="p-2">${guest.pesan || 'Pesan tidak tersedia'}</td>
                             <td class="p-2">
                                 <button class="btn-edit px-2 py-1 rounded-md" onclick="editGuest('${guest.id}', '${guest.nama}', '${guest.pesan}')">Edit</button>
                                 <button class="btn-delete px-2 py-1 rounded-md" onclick="deleteGuest('${guest.id}')">Hapus</button>
@@ -54,48 +56,47 @@ $(document).ready(function() {
                 });
             },
             error: function(xhr, status, error) {
-                console.error('Error:', error); // Debug: Lihat error di konsol
+                console.error('Error:', error);
                 showNotification('Gagal memuat daftar tamu!', 'error');
             }
         });
     }
 
-    // Tambah/Edit tamu (CREATE/UPDATE - POST/PUT)
+    // Tambah/Edit tamu (POST/PUT)
     $('#guestForm').submit(function(event) {
         event.preventDefault();
         const name = $('#name').val();
         const message = $('#message').val();
         const method = selectedGuestId ? 'PUT' : 'POST';
         const url = selectedGuestId ? `${apiUrl}/${selectedGuestId}` : apiUrl;
-
+    
+        console.log("Mengirim data:", { nama: name, pesan: message }); // Debugging
+    
         $.ajax({
             url: url,
             method: method,
-            data: JSON.stringify({ nama: name, pesan: message }), // Sesuaikan dengan properti yang diharapkan API
+            data: JSON.stringify({ nama: name, pesan: message }),
             contentType: 'application/json',
-            success: function() {
+            headers: {
+                "Access-Control-Allow-Origin": "*", // Tambahkan ini jika API mendukung
+            },
+            success: function(response) {
+                console.log("Respons API setelah POST:", response); // Debugging
                 $('#name').val('');
                 $('#message').val('');
-                selectedGuestId = null; // Reset selected guest
+                selectedGuestId = null;
                 loadGuests();
-
-                if (method === 'POST') {
-                    showNotification('Tamu berhasil ditambahkan!', 'success');
-                } else {
-                    showNotification('Tamu berhasil diperbarui!', 'success');
-                }
+                showNotification(method === 'POST' ? 'Tamu berhasil ditambahkan!' : 'Tamu berhasil diperbarui!', 'success');
             },
-            error: function() {
-                if (method === 'POST') {
-                    showNotification('Gagal menambahkan tamu!', 'error');
-                } else {
-                    showNotification('Gagal memperbarui tamu!', 'error');
-                }
+            error: function(xhr) {
+                console.error("Gagal menambahkan tamu!", xhr.responseText);
+                showNotification(method === 'POST' ? 'Gagal menambahkan tamu!' : 'Gagal memperbarui tamu!', 'error');
             }
         });
     });
+    
 
-    // Edit guest (Memasukkan data ke form, bukan API call)
+    // Edit tamu (memasukkan data ke form)
     window.editGuest = function(id, name, message) {
         selectedGuestId = id;
         $('#name').val(name);
@@ -118,6 +119,6 @@ $(document).ready(function() {
         });
     };
 
-    // Load daftar tamu saat halaman dimuat
+    // Muat daftar tamu saat halaman dimuat
     loadGuests();
 });
