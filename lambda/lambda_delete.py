@@ -2,7 +2,7 @@ import json
 import boto3
 
 # Fungsi untuk menangani DELETE request
-def handle_delete(event):
+def lambda_handler(event):
     try:
         # Ambil ID dari path (misalnya, /1741654045)
         path = event.get('path', '')  # Dapatkan path dari event

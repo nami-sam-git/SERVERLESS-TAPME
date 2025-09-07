@@ -8,7 +8,7 @@ sqs = boto3.client('sqs')
 queue_url = 'https://sqs.us-east-1.amazonaws.com/694368835432/BukuTamuQueue'  # Ganti dengan URL SQS Anda
 
 # Fungsi untuk menangani POST request
-def handle_post(event):
+def lambda_handler(event):
     try:
         # Parse data dari body request
         body = json.loads(event['body'])

@@ -2,7 +2,7 @@ import json
 import boto3
 
 # Fungsi untuk menangani PUT request
-def handle_put(event):
+def lambda_handler(event):
     try:
         # Ambil ID dari path (misalnya, /1741654045)
         path = event.get('path', '')  # Dapatkan path dari event

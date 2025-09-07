@@ -2,7 +2,7 @@ import json
 import boto3
 
 # Fungsi untuk menangani GET request
-def handle_get(event):
+def lambda_handler(event):
     try:
         # Ambil semua data dari tabel
         response = table.scan()
