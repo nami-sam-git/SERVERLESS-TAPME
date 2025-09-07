@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    const apiUrl = 'http://apiURL';
+    const apiUrl = 'https://462negyot1.execute-api.us-east-1.amazonaws.com/dev/bukutamu';
 
     let selectedGuestId = null; // ID tamu yang akan diperbarui
 
