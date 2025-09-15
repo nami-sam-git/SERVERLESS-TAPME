@@ -1,6 +1,12 @@
 import json
 import boto3
 
+# Inisialisasi klien DynamoDB dan SQS
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('BukuTamuTable')
+sqs = boto3.client('sqs')
+queue_url = 'https://sqs.us-east-1.amazonaws.com/694368835432/BukuTamuQueue'  # Ganti dengan URL SQS Anda
+
 # Fungsi untuk menangani GET request
 def lambda_handler(event, context):
     try:
