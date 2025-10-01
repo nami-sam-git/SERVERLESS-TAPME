@@ -7,11 +7,10 @@ import time
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('BukuTamuTable')
 sqs = boto3.client('sqs')
-queue_url = 'https://sqs.xxxxxxx.amazonaws.com/xxxxxxxxxxxxxx/BukuTamuQueue'  # Ganti dengan URL SQS Anda
+queue_url = 'https://sqs.us-east-1.amazonaws.com/694368835432/BukuTamuQueue'  # Ganti dengan URL SQS Anda
 
 def lambda_handler(event, context):
     try:
-        # Ambil HTTP method dari event
         http_method = event['httpMethod']
         
         # Handle OPTIONS request (Preflight CORS)
@@ -22,30 +21,22 @@ def lambda_handler(event, context):
                 "statusDescription": "200 OK",
                 "headers": {
                     "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",  # Izinkan semua domain
-                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",  # Izinkan metode yang diperlukan
-                    "Access-Control-Allow-Headers": "Content-Type"  # Izinkan header yang diperlukan
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type"
                 },
                 "body": ""
             }
         
-        # Handle GET request (Mengambil semua tamu)
-        elif http_method == 'GET':
-            return handle_get(event)
-        
-        # Handle POST request (Menambahkan tamu baru)
+        # Route ke handler sesuai HTTP method
+        if http_method == 'GET':
+            return handle_get(event, context)
         elif http_method == 'POST':
-            return handle_post(event)
-        
-        # Handle PUT request (Memperbarui tamu)
+            return handle_post(event, context)
         elif http_method == 'PUT':
-            return handle_put(event)
-        
-        # Handle DELETE request (Menghapus tamu)
+            return handle_put(event, context)
         elif http_method == 'DELETE':
-            return handle_delete(event)
-        
-        # Jika method tidak dikenali
+            return handle_delete(event, context)
         else:
             return {
                 "isBase64Encoded": False,
@@ -70,13 +61,13 @@ def lambda_handler(event, context):
             "body": json.dumps({"message": str(e)})
         }
 
-# Fungsi untuk menangani GET request
-def handle_get(event):
+# -------------------------------
+# Fungsi untuk menangani GET
+# -------------------------------
+def handle_get(event, context):
     try:
-        # Ambil semua data dari tabel
         response = table.scan()
         
-        # Jika tidak ada data, buat data awal
         if not response['Items']:
             initial_data = [
                 {'id': '1', 'nama': 'Agus', 'pesan': 'Samawa ya gaes'},
@@ -85,15 +76,10 @@ def handle_get(event):
                 {'id': '4', 'nama': 'Darsimin', 'pesan': 'Semoga langgeng'},
                 {'id': '5', 'nama': 'Eriana', 'pesan': 'Selamat menempuh hidup baru, salam dari Bapak'}
             ]
-            
-            # Masukkan data awal ke tabel
             for item in initial_data:
                 table.put_item(Item=item)
-            
-            # Ambil data lagi setelah memasukkan data awal
             response = table.scan()
         
-        # Kembalikan data tamu
         return {
             "isBase64Encoded": False,
             "statusCode": 200,
@@ -102,7 +88,7 @@ def handle_get(event):
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*"
             },
-            "body": json.dumps(response['Items'])  # Pastikan body adalah string JSON
+            "body": json.dumps(response['Items'])
         }
     
     except ClientError as e:
@@ -117,15 +103,15 @@ def handle_get(event):
             "body": json.dumps({"message": str(e)})
         }
 
-# Fungsi untuk menangani POST request
-def handle_post(event):
+# -------------------------------
+# Fungsi untuk menangani POST
+# -------------------------------
+def handle_post(event, context):
     try:
-        # Parse data dari body request
         body = json.loads(event['body'])
         nama = body.get('nama', '').strip()
         pesan = body.get('pesan', '').strip()
         
-        # Validasi input
         if not nama or not pesan:
             return {
                 "isBase64Encoded": False,
@@ -138,23 +124,14 @@ def handle_post(event):
                 "body": json.dumps({"message": "Nama dan pesan tidak boleh kosong"})
             }
 
-        # Generate ID unik (contoh menggunakan timestamp)
         id = str(int(time.time()))
+        message = {'id': id, 'nama': nama, 'pesan': pesan}
         
-        # Buat pesan untuk dikirim ke SQS
-        message = {
-            'id': id,
-            'nama': nama,
-            'pesan': pesan
-        }
-        
-        # Kirim pesan ke SQS
         sqs.send_message(
             QueueUrl=queue_url,
             MessageBody=json.dumps(message)
         )
         
-        # Kembalikan respons sukses
         return {
             "isBase64Encoded": False,
             "statusCode": 200,
@@ -178,12 +155,13 @@ def handle_post(event):
             "body": json.dumps({"message": str(e)})
         }
 
-# Fungsi untuk menangani PUT request
-def handle_put(event):
+# -------------------------------
+# Fungsi untuk menangani PUT
+# -------------------------------
+def handle_put(event, context):
     try:
-        # Ambil ID dari path (misalnya, /1741654045)
-        path = event.get('path', '')  # Dapatkan path dari event
-        id = path.split('/')[-1]  # Ambil ID dari path
+        path = event.get('path', '')
+        id = path.split('/')[-1]
 
         if not id:
             return {
@@ -197,12 +175,10 @@ def handle_put(event):
                 "body": json.dumps({"message": "ID tidak ditemukan di path"})
             }
 
-        # Parse data dari body request
         body = json.loads(event['body'])
         nama = body.get('nama', '').strip()
         pesan = body.get('pesan', '').strip()
         
-        # Validasi input
         if not nama or not pesan:
             return {
                 "isBase64Encoded": False,
@@ -215,7 +191,6 @@ def handle_put(event):
                 "body": json.dumps({"message": "Nama dan pesan tidak boleh kosong"})
             }
 
-        # Perbarui data di tabel
         table.update_item(
             Key={'id': id},
             UpdateExpression='SET nama = :nama, pesan = :pesan',
@@ -225,7 +200,6 @@ def handle_put(event):
             }
         )
         
-        # Kembalikan respons sukses
         return {
             "isBase64Encoded": False,
             "statusCode": 200,
@@ -249,12 +223,13 @@ def handle_put(event):
             "body": json.dumps({"message": str(e)})
         }
 
-# Fungsi untuk menangani DELETE request
-def handle_delete(event):
+# -------------------------------
+# Fungsi untuk menangani DELETE
+# -------------------------------
+def handle_delete(event, context):
     try:
-        # Ambil ID dari path (misalnya, /1741654045)
-        path = event.get('path', '')  # Dapatkan path dari event
-        id = path.split('/')[-1]  # Ambil ID dari path
+        path = event.get('path', '')
+        id = path.split('/')[-1]
 
         if not id:
             return {
@@ -268,10 +243,8 @@ def handle_delete(event):
                 "body": json.dumps({"message": "ID tidak ditemukan di path"})
             }
 
-        # Hapus data dari tabel
         table.delete_item(Key={'id': id})
         
-        # Kembalikan respons sukses
         return {
             "isBase64Encoded": False,
             "statusCode": 200,
