@@ -1,8 +1,15 @@
 import json
 import boto3
+from botocore.exceptions import ClientError
+import time
 
-# Fungsi untuk menangani DELETE request
+# Inisialisasi klien DynamoDB dan SQS
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('BukuTamuTable')
+
 def lambda_handler(event, context):
+    # Fungsi untuk menangani DELETE request
+def handle_delete(event):
     try:
         # Ambil ID dari path (misalnya, /1741654045)
         path = event.get('path', '')  # Dapatkan path dari event

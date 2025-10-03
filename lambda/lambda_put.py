@@ -1,5 +1,11 @@
 import json
 import boto3
+from botocore.exceptions import ClientError
+import time
+
+# Inisialisasi klien DynamoDB dan SQS
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('BukuTamuTable')
 
 # Fungsi untuk menangani PUT request
 def lambda_handler(event, context):

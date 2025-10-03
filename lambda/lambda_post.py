@@ -1,14 +1,15 @@
 import json
 import boto3
+from botocore.exceptions import ClientError
+import time
 
 # Inisialisasi klien DynamoDB dan SQS
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('BukuTamuTable')
-sqs = boto3.client('sqs')
-queue_url = 'https://sqs.us-east-1.amazonaws.com/694368835432/BukuTamuQueue'  # Ganti dengan URL SQS Anda
 
-# Fungsi untuk menangani POST request
 def lambda_handler(event, context):
+    # Fungsi untuk menangani POST request
+def handle_post(event):
     try:
         # Parse data dari body request
         body = json.loads(event['body'])
